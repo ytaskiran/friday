@@ -1,0 +1,28 @@
+# Binary
+friday
+
+# SQLite databases
+*.db
+*.db-wal
+*.db-shm
+
+# Coverage
+coverage.out
+coverage.html
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Internal docs
+docs/roadmap/
+CLAUDE.md
+
+# Test/debug artifacts
+*.png
+qr_scan_page.html
