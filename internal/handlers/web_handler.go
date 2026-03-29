@@ -44,6 +44,7 @@ tailwind.config = {
     }
 }
 </script>
+<script>` + i18nScript + `</script>
 <style>
     @keyframes spin { to { transform: rotate(360deg); } }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
@@ -109,7 +110,7 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -117,6 +118,7 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
     ` + sharedHead + `
 </head>
 <body class="min-h-screen bg-gray-50">
+    ` + landingLangSwitcher + `
     <!-- Hero Section -->
     <div class="bg-gradient-to-br from-whatsapp-500 to-whatsapp-700 text-white">
         <div class="max-w-4xl mx-auto px-4 py-16 sm:py-24 text-center">
@@ -215,9 +217,9 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
 
             if (data.connected) {
                 isConnected = true;
-                document.getElementById('status-title').textContent = 'Connected';
-                document.getElementById('status-message').textContent = 'WhatsApp is ready. Access the dashboard to send messages.';
-                document.getElementById('btn-text').textContent = 'Go to Dashboard';
+                document.getElementById('status-title').textContent = t('Connected');
+                document.getElementById('status-message').textContent = t('WhatsApp is ready. Access the dashboard to send messages.');
+                document.getElementById('btn-text').textContent = t('Go to Dashboard');
                 document.getElementById('status-icon').innerHTML = '<svg class="w-8 h-8 text-whatsapp-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>';
             }
         } catch (error) {
@@ -236,7 +238,7 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
         const spinner = document.getElementById('btn-spinner');
 
         btn.disabled = true;
-        btnText.textContent = 'Connecting...';
+        btnText.textContent = t('Connecting...');
         spinner.classList.remove('hidden');
 
         try {
@@ -246,13 +248,13 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
             if (data.success) {
                 // Check if already connected (existing session restored immediately)
                 if (data.message && data.message.includes('Already connected')) {
-                    Toast.success('Connected! Going to dashboard...');
+                    Toast.success(t('Connected! Going to dashboard...'));
                     setTimeout(() => window.location.href = '/dashboard', 1000);
                     return;
                 }
 
                 // Connection initiated - poll status to check session restoration
-                btnText.textContent = 'Checking session...';
+                btnText.textContent = t('Checking session...');
 
                 let attempts = 0;
                 const maxAttemptsWithSession = 10; // 15 seconds for session restoration
@@ -266,7 +268,7 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
 
                         if (statusData.connected) {
                             // Fully connected! Go to dashboard
-                            Toast.success('Connected! Going to dashboard...');
+                            Toast.success(t('Connected! Going to dashboard...'));
                             window.location.href = '/dashboard';
                             return;
                         }
@@ -275,9 +277,9 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
 
                         if (statusData.has_session) {
                             if (statusData.connecting) {
-                                btnText.textContent = 'Restoring session...';
+                                btnText.textContent = t('Restoring session...');
                             } else {
-                                btnText.textContent = 'Session found, connecting...';
+                                btnText.textContent = t('Session found, connecting...');
                             }
                         }
 
@@ -286,13 +288,13 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
                         } else {
                             if (statusData.has_session) {
                                 // Session exists but couldn't connect - might be stale
-                                Toast.warning('Session may be stale. Try disconnecting from your phone first.');
+                                Toast.warning(t('Session may be stale. Try disconnecting from your phone first.'));
                                 btn.disabled = false;
-                                btnText.textContent = 'Try Again';
+                                btnText.textContent = t('Try Again');
                                 spinner.classList.add('hidden');
                             } else {
                                 // No session - need QR code
-                                Toast.info('QR code required. Redirecting...');
+                                Toast.info(t('QR code required. Redirecting...'));
                                 window.location.href = '/qr-scan';
                             }
                         }
@@ -310,9 +312,9 @@ func (h *WebHandler) HandleLandingPage(w http.ResponseWriter, r *http.Request) {
                 throw new Error(data.message || 'Connection failed');
             }
         } catch (error) {
-            Toast.error('Failed to connect: ' + error.message);
+            Toast.error(t('Failed to connect: ') + error.message);
             btn.disabled = false;
-            btnText.textContent = 'Connect WhatsApp';
+            btnText.textContent = t('Connect WhatsApp');
             spinner.classList.add('hidden');
         }
     }
@@ -334,7 +336,7 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -352,7 +354,7 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
                 <span class="text-sm">Back</span>
             </a>
             <h1 class="font-semibold text-gray-900">Scan QR Code</h1>
-            <div class="w-16"></div>
+            <div class="w-16">` + langSwitcher + `</div>
         </div>
     </div>
 
@@ -460,13 +462,13 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
             updateProgress();
 
             if (countdown <= 10) {
-                document.getElementById('timer-label').textContent = 'Expiring soon';
+                document.getElementById('timer-label').textContent = t('Expiring soon');
             }
 
             if (countdown <= 0) {
                 clearInterval(countdownInterval);
-                document.getElementById('timer-label').textContent = 'Expired';
-                Toast.warning('QR Code expired. Refreshing...');
+                document.getElementById('timer-label').textContent = t('Expired');
+                Toast.warning(t('QR Code expired. Refreshing...'));
                 setTimeout(() => {
                     fetch('/api/whatsapp/connect', { method: 'POST' }).then(() => refreshQR());
                 }, 1000);
@@ -486,10 +488,10 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
                 const timestamp = new Date().getTime();
                 img.src = '/api/whatsapp/qr.png?' + timestamp;
                 startCountdown();
-                document.getElementById('timer-label').textContent = 'QR Code Active';
+                document.getElementById('timer-label').textContent = t('QR Code Active');
             })
             .catch(error => {
-                Toast.error('Failed to refresh QR code');
+                Toast.error(t('Failed to refresh QR code'));
                 img.style.opacity = '1';
                 loading.classList.add('hidden');
             });
@@ -507,9 +509,9 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
             const statusData = await statusResp.json();
 
             if (statusData.connected) {
-                showStatus('Connected! Redirecting to dashboard...', 'success');
+                showStatus(t('Connected! Redirecting to dashboard...'), 'success');
                 document.getElementById('timer-container').classList.add('hidden');
-                Toast.success('WhatsApp connected successfully!');
+                Toast.success(t('WhatsApp connected successfully!'));
                 setTimeout(() => window.location.href = '/dashboard', 1500);
                 return;
             }
@@ -518,14 +520,14 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
         }
 
         // Not connected - try to generate QR code
-        showStatus('Generating QR code...', 'loading');
+        showStatus(t('Generating QR code...'), 'loading');
         setTimeout(async () => {
             try {
                 await fetch('/api/whatsapp/connect', { method: 'POST' });
                 // Small delay before reload to let QR generate
                 setTimeout(() => location.reload(), 500);
             } catch (e) {
-                showStatus('Failed to connect. Please try again.', 'error');
+                showStatus(t('Failed to connect. Please try again.'), 'error');
             }
         }, 2000);
     }
@@ -561,11 +563,11 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
                     clearInterval(statusCheckInterval);
                     clearInterval(countdownInterval);
 
-                    showStatus('Connected! Redirecting to dashboard...', 'success');
+                    showStatus(t('Connected! Redirecting to dashboard...'), 'success');
                     document.getElementById('timer-container').classList.add('hidden');
                     document.getElementById('qr-container').classList.add('hidden');
 
-                    Toast.success('WhatsApp connected successfully!');
+                    Toast.success(t('WhatsApp connected successfully!'));
                     setTimeout(() => window.location.href = '/dashboard', 2000);
                 }
             } catch (error) {
@@ -581,10 +583,10 @@ func (h *WebHandler) HandleQRScanPage(w http.ResponseWriter, r *http.Request) {
             const data = await response.json();
 
             if (data.connected) {
-                showStatus('Already connected! Redirecting to dashboard...', 'success');
+                showStatus(t('Already connected! Redirecting to dashboard...'), 'success');
                 document.getElementById('timer-container').classList.add('hidden');
                 document.getElementById('qr-container').classList.add('hidden');
-                Toast.success('WhatsApp is already connected!');
+                Toast.success(t('WhatsApp is already connected!'));
                 setTimeout(() => window.location.href = '/dashboard', 1500);
                 return; // Don't start countdown or monitoring
             }
@@ -627,7 +629,7 @@ func (h *WebHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -788,17 +790,17 @@ func (h *WebHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
                         '<svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
                         '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636a9 9 0 010 12.728m-3.536-3.536a4 4 0 010-5.656m-7.072 7.072a9 9 0 010-12.728m3.536 3.536a4 4 0 010 5.656"/>' +
                         '</svg>' +
-                        '<p class="text-sm">Connect WhatsApp to view contacts</p>' +
-                        '<a href="/" class="mt-2 inline-block text-sm text-whatsapp-600 hover:text-whatsapp-700 font-medium">Go to Connect</a>' +
+                        '<p class="text-sm">' + t('Connect WhatsApp to view contacts') + '</p>' +
+                        '<a href="/" class="mt-2 inline-block text-sm text-whatsapp-600 hover:text-whatsapp-700 font-medium">' + t('Go to Connect') + '</a>' +
                         '</div>';
                 } else {
-                    container.innerHTML = '<p class="text-center py-4 text-red-500 text-sm">Error loading contacts</p>';
-                    Toast.error('Failed to load contacts');
+                    container.innerHTML = '<p class="text-center py-4 text-red-500 text-sm">' + t('Error loading contacts') + '</p>';
+                    Toast.error(t('Failed to load contacts'));
                 }
             }
         } catch (error) {
-            container.innerHTML = '<p class="text-center py-4 text-red-500 text-sm">Error: ' + error.message + '</p>';
-            Toast.error('Failed to load contacts');
+            container.innerHTML = '<p class="text-center py-4 text-red-500 text-sm">' + t('Error') + ': ' + error.message + '</p>';
+            Toast.error(t('Failed to load contacts'));
         }
     }
 
@@ -806,7 +808,7 @@ func (h *WebHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
         const container = document.getElementById('contacts-list');
 
         if (contacts.length === 0) {
-            container.innerHTML = '<p class="text-center py-4 text-gray-500 text-sm">No contacts found</p>';
+            container.innerHTML = '<p class="text-center py-4 text-gray-500 text-sm">' + t('No contacts found') + '</p>';
             return;
         }
 
@@ -848,7 +850,7 @@ func (h *WebHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
 
     function selectContact(identifier) {
         document.getElementById('recipient').value = identifier;
-        Toast.success('Selected: ' + identifier);
+        Toast.success(t('Selected: ') + identifier);
     }
 
     function showContactPicker() {
@@ -866,12 +868,12 @@ func (h *WebHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
         const spinner = document.getElementById('send-btn-spinner');
 
         if (!recipient || !message) {
-            Toast.warning('Please enter recipient and message');
+            Toast.warning(t('Please enter recipient and message'));
             return;
         }
 
         btn.disabled = true;
-        btnText.textContent = 'Sending...';
+        btnText.textContent = t('Sending...');
         spinner.classList.remove('hidden');
 
         try {
@@ -890,15 +892,15 @@ func (h *WebHandler) HandleDashboard(w http.ResponseWriter, r *http.Request) {
                 (data.success ? 'bg-gray-900 text-green-400' : 'bg-gray-900 text-red-400');
 
             if (data.success) {
-                Toast.success('Message sent successfully!');
+                Toast.success(t('Message sent successfully!'));
             } else {
-                Toast.error('Failed to send: ' + data.message);
+                Toast.error(t('Failed to send: ') + data.message);
             }
         } catch (error) {
-            Toast.error('Error: ' + error.message);
+            Toast.error(t('Error') + ': ' + error.message);
         } finally {
             btn.disabled = false;
-            btnText.textContent = 'Send Message';
+            btnText.textContent = t('Send Message');
             spinner.classList.add('hidden');
         }
     }
@@ -937,6 +939,7 @@ const navComponent = `
                 </div>
             </div>
             <div class="flex items-center gap-2">
+                ` + langSwitcher + `
                 <button onclick="refreshStatus()" id="status-indicator" class="flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-sm hover:bg-gray-100 transition-colors" title="Click to refresh status">
                     <span class="w-2 h-2 rounded-full bg-gray-300"></span>
                     <span class="text-gray-500">Checking...</span>
@@ -972,16 +975,16 @@ async function refreshStatus() {
         const data = await response.json();
 
         if (data.connected) {
-            indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-600">Connected</span>';
+            indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-green-500"></span><span class="text-green-600">' + t('Connected') + '</span>';
             wasConnected = true;
             consecutiveDisconnects = 0;
         } else {
-            indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-red-600">Disconnected</span>';
+            indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-red-500"></span><span class="text-red-600">' + t('Disconnected') + '</span>';
             consecutiveDisconnects++;
 
             if (wasConnected === true && consecutiveDisconnects >= 2) {
-                indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-yellow-600">Reconnecting...</span>';
-                if (typeof Toast !== 'undefined') Toast.warning('Connection lost. Redirecting...');
+                indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-yellow-600">' + t('Reconnecting...') + '</span>';
+                if (typeof Toast !== 'undefined') Toast.warning(t('Connection lost. Redirecting...'));
                 setTimeout(() => {
                     window.location.href = '/';
                 }, 1500);
@@ -991,12 +994,12 @@ async function refreshStatus() {
             wasConnected = false;
         }
     } catch (e) {
-        indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-300"></span><span class="text-gray-500">Unknown</span>';
+        indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-gray-300"></span><span class="text-gray-500">' + t('Unknown') + '</span>';
         consecutiveDisconnects++;
 
         // Network error could mean server restart - treat as disconnect
         if (wasConnected === true && consecutiveDisconnects >= 2) {
-            if (typeof Toast !== 'undefined') Toast.warning('Server connection lost. Redirecting...');
+            if (typeof Toast !== 'undefined') Toast.warning(t('Server connection lost. Redirecting...'));
             setTimeout(() => {
                 window.location.href = '/';
             }, 1500);
@@ -1005,26 +1008,26 @@ async function refreshStatus() {
 }
 
 async function disconnectWhatsApp() {
-    if (!confirm('Are you sure you want to disconnect WhatsApp? You will need to scan a new QR code to reconnect.')) return;
+    if (!confirm(t('Are you sure you want to disconnect WhatsApp? You will need to scan a new QR code to reconnect.'))) return;
 
     const indicator = document.getElementById('status-indicator');
-    indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-yellow-600">Disconnecting...</span>';
+    indicator.innerHTML = '<span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse"></span><span class="text-yellow-600">' + t('Disconnecting...') + '</span>';
 
     try {
         const response = await fetch('/api/whatsapp/disconnect', { method: 'POST' });
         const data = await response.json();
         if (data.success) {
-            if (typeof Toast !== 'undefined') Toast.success('Disconnected successfully');
+            if (typeof Toast !== 'undefined') Toast.success(t('Disconnected successfully'));
             // Redirect to landing page - user can click Connect to get new QR
             setTimeout(() => {
                 window.location.href = '/';
             }, 1000);
         } else {
-            if (typeof Toast !== 'undefined') Toast.error(data.message || 'Failed to disconnect');
+            if (typeof Toast !== 'undefined') Toast.error(data.message || t('Failed to disconnect'));
             refreshStatus();
         }
     } catch (e) {
-        if (typeof Toast !== 'undefined') Toast.error('Failed to disconnect');
+        if (typeof Toast !== 'undefined') Toast.error(t('Failed to disconnect'));
         refreshStatus();
     }
 }
@@ -1044,7 +1047,7 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1156,10 +1159,10 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
                 drafts = data.drafts;
                 renderDrafts();
             } else {
-                Toast.error('Failed to load drafts: ' + data.message);
+                Toast.error(t('Failed to load drafts: ') + data.message);
             }
         } catch (error) {
-            Toast.error('Failed to load drafts');
+            Toast.error(t('Failed to load drafts'));
         }
     }
 
@@ -1206,7 +1209,7 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
                         </svg>
-                        Use this draft
+                        ${t('Use this draft')}
                     </a>
                 </div>
             ` + "`" + `;
@@ -1220,7 +1223,7 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
     }
 
     function showCreateModal() {
-        document.getElementById('modal-title').textContent = 'New Draft';
+        document.getElementById('modal-title').textContent = t('New Draft');
         document.getElementById('draft-id').value = '';
         document.getElementById('draft-title').value = '';
         document.getElementById('draft-content').value = '';
@@ -1232,7 +1235,7 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
         const draft = drafts.find(d => d.id === id);
         if (!draft) return;
 
-        document.getElementById('modal-title').textContent = 'Edit Draft';
+        document.getElementById('modal-title').textContent = t('Edit Draft');
         document.getElementById('draft-id').value = draft.id;
         document.getElementById('draft-title').value = draft.title;
         document.getElementById('draft-content').value = draft.content;
@@ -1245,19 +1248,19 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
     }
 
     async function deleteDraft(id) {
-        if (!confirm('Delete this draft?')) return;
+        if (!confirm(t('Delete this draft?'))) return;
 
         try {
             const response = await fetch('/api/drafts/' + id, { method: 'DELETE' });
             const data = await response.json();
             if (data.success) {
-                Toast.success('Draft deleted');
+                Toast.success(t('Draft deleted'));
                 loadDrafts();
             } else {
-                Toast.error('Failed to delete: ' + data.message);
+                Toast.error(t('Failed to delete: ') + data.message);
             }
         } catch (error) {
-            Toast.error('Failed to delete draft');
+            Toast.error(t('Failed to delete draft'));
         }
     }
 
@@ -1268,7 +1271,7 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
         const content = document.getElementById('draft-content').value;
 
         if (!title || !content) {
-            Toast.error('Title and content are required');
+            Toast.error(t('Title and content are required'));
             return;
         }
 
@@ -1281,14 +1284,14 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
             });
             const data = await response.json();
             if (data.success) {
-                Toast.success(isEdit ? 'Draft updated' : 'Draft created');
+                Toast.success(isEdit ? t('Draft updated') : t('Draft created'));
                 hideModal();
                 loadDrafts();
             } else {
-                Toast.error('Failed to save: ' + data.message);
+                Toast.error(t('Failed to save: ') + data.message);
             }
         } catch (error) {
-            Toast.error('Failed to save draft');
+            Toast.error(t('Failed to save draft'));
         }
     });
 
@@ -1301,7 +1304,7 @@ func (h *WebHandler) HandleDraftsPage(w http.ResponseWriter, r *http.Request) {
         const preview = document.getElementById('placeholders-preview');
 
         if (placeholders.length > 0) {
-            preview.innerHTML = 'Placeholders found: ' + placeholders.map(p => '<code class="bg-gray-100 px-1 rounded">{{' + p + '}}</code>').join(', ');
+            preview.innerHTML = t('Placeholders found: ') + placeholders.map(p => '<code class="bg-gray-100 px-1 rounded">{{' + p + '}}</code>').join(', ');
         } else {
             preview.innerHTML = '';
         }
@@ -1354,7 +1357,7 @@ func (h *WebHandler) HandleContactDetailPage(w http.ResponseWriter, r *http.Requ
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1451,7 +1454,7 @@ func (h *WebHandler) HandleContactDetailPage(w http.ResponseWriter, r *http.Requ
                 if (contact) {
                     renderContact();
                 } else {
-                    document.getElementById('contact-name').textContent = 'Contact not found';
+                    document.getElementById('contact-name').textContent = t('Contact not found');
                 }
             }
         } catch (error) {
@@ -1555,7 +1558,7 @@ func (h *WebHandler) HandleContactDetailPage(w http.ResponseWriter, r *http.Requ
         const value = document.getElementById('attr-value').value.trim();
 
         if (!key || !value) {
-            Toast.error('Key and value are required');
+            Toast.error(t('Key and value are required'));
             return;
         }
 
@@ -1567,19 +1570,19 @@ func (h *WebHandler) HandleContactDetailPage(w http.ResponseWriter, r *http.Requ
             });
             const data = await response.json();
             if (data.success) {
-                Toast.success(editingKey ? 'Attribute updated' : 'Attribute saved');
+                Toast.success(editingKey ? t('Attribute updated') : t('Attribute saved'));
                 hideAddAttribute();
                 loadAttributes();
             } else {
-                Toast.error('Failed to save: ' + data.message);
+                Toast.error(t('Failed to save: ') + data.message);
             }
         } catch (error) {
-            Toast.error(editingKey ? 'Failed to update attribute' : 'Failed to save attribute');
+            Toast.error(editingKey ? t('Failed to update attribute') : t('Failed to save attribute'));
         }
     }
 
     async function deleteAttribute(key) {
-        if (!confirm('Delete attribute "' + key + '"?')) return;
+        if (!confirm(t('Delete') + ' "' + key + '"?')) return;
 
         try {
             const response = await fetch('/api/contacts/' + encodeURIComponent(contactJid) + '/attributes/' + encodeURIComponent(key), {
@@ -1587,13 +1590,13 @@ func (h *WebHandler) HandleContactDetailPage(w http.ResponseWriter, r *http.Requ
             });
             const data = await response.json();
             if (data.success) {
-                Toast.success('Attribute deleted');
+                Toast.success(t('Attribute deleted'));
                 loadAttributes();
             } else {
-                Toast.error('Failed to delete: ' + data.message);
+                Toast.error(t('Failed to delete: ') + data.message);
             }
         } catch (error) {
-            Toast.error('Failed to delete attribute');
+            Toast.error(t('Failed to delete attribute'));
         }
     }
 
@@ -1621,7 +1624,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -1851,7 +1854,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                 }
             }
         } catch (error) {
-            Toast.error('Failed to load contact groups');
+            Toast.error(t('Failed to load contact groups'));
         }
     }
 
@@ -1874,8 +1877,8 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
         if (matches.length === 0) {
             dropdown.innerHTML = query
-                ? '<div class="p-3 text-sm text-gray-500">No groups found matching "' + escapeHtml(query) + '"</div>'
-                : '<div class="p-3 text-sm text-gray-500">No contact groups yet. <a href="/groups" class="text-whatsapp-600 hover:text-whatsapp-700">Create one</a></div>';
+                ? '<div class="p-3 text-sm text-gray-500">' + t('No groups found matching') + ' "' + escapeHtml(query) + '"</div>'
+                : '<div class="p-3 text-sm text-gray-500">' + t('No contact groups yet.') + ' <a href="/groups" class="text-whatsapp-600 hover:text-whatsapp-700">' + t('Create one') + '</a></div>';
         } else {
             dropdown.innerHTML = matches.map(g => ` + "`" + `
                 <div onclick="selectGroup(${JSON.stringify(g).replace(/"/g, '&quot;')})"
@@ -1887,7 +1890,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                     </div>
                     <div>
                         <div class="font-medium text-gray-900">${escapeHtml(g.name)}</div>
-                        <div class="text-sm text-gray-500">${g.member_count || 0} members</div>
+                        <div class="text-sm text-gray-500">${g.member_count || 0} ${t('members')}</div>
                     </div>
                 </div>
             ` + "`" + `).join('');
@@ -1902,7 +1905,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
         const selected = document.getElementById('selected-group');
         document.getElementById('selected-group-name').textContent = group.name;
-        document.getElementById('selected-group-count').textContent = (group.member_count || 0) + ' members';
+        document.getElementById('selected-group-count').textContent = (group.member_count || 0) + ' ' + t('members');
         document.getElementById('edit-group-link').href = '/groups/' + group.id;
         selected.classList.remove('hidden');
 
@@ -1927,7 +1930,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                 checkUrlParams();
             }
         } catch (error) {
-            Toast.error('Failed to load drafts');
+            Toast.error(t('Failed to load drafts'));
         }
     }
 
@@ -1940,7 +1943,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                 checkUrlParams();
             }
         } catch (error) {
-            Toast.error('Failed to load contacts');
+            Toast.error(t('Failed to load contacts'));
         }
     }
 
@@ -1964,7 +1967,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
     function renderDraftOptions() {
         const select = document.getElementById('draft-select');
-        select.innerHTML = '<option value="">-- Choose a draft --</option>' +
+        select.innerHTML = '<option value="">' + t('-- Choose a draft --') + '</option>' +
             drafts.map(d => '<option value="' + d.id + '">' + escapeHtml(d.title) + '</option>').join('');
     }
 
@@ -2006,8 +2009,8 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
         if (matches.length === 0) {
             dropdown.innerHTML = query
-                ? '<div class="p-3 text-sm text-gray-500">No contacts found matching "' + escapeHtml(query) + '"</div>'
-                : '<div class="p-3 text-sm text-gray-500">No contacts available</div>';
+                ? '<div class="p-3 text-sm text-gray-500">' + t('No contacts found matching') + ' "' + escapeHtml(query) + '"</div>'
+                : '<div class="p-3 text-sm text-gray-500">' + t('No contacts available') + '</div>';
         } else {
             dropdown.innerHTML = matches.map(c => ` + "`" + `
                 <div onclick="selectContact(${JSON.stringify(c).replace(/"/g, '&quot;')})"
@@ -2066,7 +2069,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                     <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
                     </svg>
-                    <p>Select a draft and contact to preview</p>
+                    <p>${t('Select a draft and contact to preview')}</p>
                 </div>
             ` + "`" + `;
             placeholdersDiv.classList.add('hidden');
@@ -2093,14 +2096,14 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
                 placeholdersDiv.classList.remove('hidden');
                 document.getElementById('filled-placeholders').innerHTML = filled.length > 0
-                    ? 'Filled: ' + filled.map(p => '<code class="bg-green-100 px-1 rounded">{{' + p + '}}</code>').join(', ')
+                    ? t('Filled: ') + filled.map(p => '<code class="bg-green-100 px-1 rounded">{{' + p + '}}</code>').join(', ')
                     : '';
                 document.getElementById('missing-placeholders').innerHTML = missing.length > 0
-                    ? 'Missing: ' + missing.map(p => '<code class="bg-amber-100 px-1 rounded">{{' + p + '}}</code>').join(', ')
+                    ? t('Missing: ') + missing.map(p => '<code class="bg-amber-100 px-1 rounded">{{' + p + '}}</code>').join(', ')
                     : '';
             }
         } catch (error) {
-            container.innerHTML = '<div class="text-red-500 p-4">Failed to generate preview</div>';
+            container.innerHTML = '<div class="text-red-500 p-4">' + t('Failed to generate preview') + '</div>';
         }
     }
 
@@ -2111,7 +2114,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                     <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/>
                     </svg>
-                    <p>Select a draft and contact group to preview</p>
+                    <p>${t('Select a draft and contact group to preview')}</p>
                 </div>
             ` + "`" + `;
             placeholdersDiv.classList.add('hidden');
@@ -2128,23 +2131,23 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                         <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
-                        <span class="font-medium text-blue-900">Batch Send Summary</span>
+                        <span class="font-medium text-blue-900">${t('Batch Send Summary')}</span>
                     </div>
                     <ul class="text-sm text-blue-800 space-y-1">
-                        <li><strong>Group:</strong> ${escapeHtml(selectedGroup.name)}</li>
-                        <li><strong>Recipients:</strong> ${memberCount} contacts</li>
-                        <li><strong>Draft:</strong> ${escapeHtml(selectedDraft.title)}</li>
+                        <li><strong>${t('Group:')}</strong> ${escapeHtml(selectedGroup.name)}</li>
+                        <li><strong>${t('Recipients:')}</strong> ${memberCount} ${t('contacts')}</li>
+                        <li><strong>${t('Draft:')}</strong> ${escapeHtml(selectedDraft.title)}</li>
                     </ul>
                 </div>
                 <div class="bg-gray-50 rounded-lg p-4">
-                    <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">Message Template</div>
+                    <div class="text-xs text-gray-500 uppercase tracking-wide mb-2">${t('Message Template')}</div>
                     <div class="text-sm text-gray-600 whitespace-pre-wrap">${escapeHtml(selectedDraft.content)}</div>
                 </div>
                 <div class="text-xs text-gray-500">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    Messages will be personalized using each contact's attributes
+                    ${t("Messages will be personalized using each contact's attributes")}
                 </div>
             </div>
         ` + "`" + `;
@@ -2163,7 +2166,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
             placeholdersDiv.classList.remove('hidden');
             document.getElementById('filled-placeholders').innerHTML = '';
             document.getElementById('missing-placeholders').innerHTML =
-                'Placeholders: ' + placeholders.map(p => '<code class="bg-blue-100 px-1 rounded">{{' + p + '}}</code>').join(', ');
+                t('Placeholders: ') + placeholders.map(p => '<code class="bg-blue-100 px-1 rounded">{{' + p + '}}</code>').join(', ');
         } else {
             placeholdersDiv.classList.add('hidden');
         }
@@ -2173,11 +2176,11 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
         const btn = document.getElementById('send-btn');
         if (currentMode === 'contact') {
             btn.disabled = !selectedDraft || !selectedContact;
-            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send Message';
+            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> ' + t('Send Message');
         } else {
             btn.disabled = !selectedDraft || !selectedGroup;
             const count = selectedGroup ? (selectedGroup.member_count || 0) : 0;
-            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> Send to ' + count + ' Contacts';
+            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg> ' + count + ' ' + t('contacts') + ' ' + t('Send');
         }
     }
 
@@ -2194,7 +2197,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
         const btn = document.getElementById('send-btn');
         btn.disabled = true;
-        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Sending...';
+        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> ' + t('Sending...');
 
         try {
             const response = await fetch('/api/drafts/' + selectedDraft.id + '/send', {
@@ -2205,7 +2208,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
             const data = await response.json();
 
             if (data.success) {
-                Toast.success('Message sent successfully!');
+                Toast.success(t('Message sent successfully!'));
                 // Reset form
                 clearContact();
                 document.getElementById('draft-select').value = '';
@@ -2213,10 +2216,10 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                 document.getElementById('draft-content-preview').classList.add('hidden');
                 updatePreview();
             } else {
-                Toast.error('Failed to send: ' + data.message);
+                Toast.error(t('Failed to send: ') + data.message);
             }
         } catch (error) {
-            Toast.error('Failed to send message');
+            Toast.error(t('Failed to send message'));
         }
 
         btn.disabled = false;
@@ -2228,13 +2231,13 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
         // Check if group has members
         if ((selectedGroup.member_count || 0) === 0) {
-            Toast.error('Cannot send to an empty group');
+            Toast.error(t('Cannot send to an empty group'));
             return;
         }
 
         const btn = document.getElementById('send-btn');
         btn.disabled = true;
-        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Creating batch...';
+        btn.innerHTML = '<svg class="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> ' + t('Creating batch...');
 
         try {
             const response = await fetch('/api/batch-runs', {
@@ -2251,7 +2254,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
                 const memberCount = selectedGroup.member_count || 0;
                 const batchId = data.batch ? data.batch.id : null;
 
-                Toast.success('Batch created! ' + memberCount + ' messages queued.');
+                Toast.success(t('Batch Created Successfully!'));
 
                 // Reset form
                 clearGroup();
@@ -2262,10 +2265,10 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
 
                 showBatchSuccessModal(memberCount, batchId);
             } else {
-                Toast.error('Failed to create batch: ' + data.message);
+                Toast.error(t('Failed to create batch: ') + data.message);
             }
         } catch (error) {
-            Toast.error('Failed to create batch');
+            Toast.error(t('Failed to create batch'));
         }
 
         btn.disabled = false;
@@ -2283,7 +2286,7 @@ func (h *WebHandler) HandleSendPage(w http.ResponseWriter, r *http.Request) {
         const message = document.getElementById('batch-modal-message');
         const viewLink = document.getElementById('batch-view-link');
 
-        message.textContent = messageCount + ' message' + (messageCount !== 1 ? 's have' : ' has') + ' been queued and will be sent shortly.';
+        message.textContent = t('Your messages have been queued and will be sent shortly.');
 
         // Link to specific batch run if ID is available, otherwise to batch runs list
         if (batchId) {
@@ -2339,7 +2342,7 @@ func (h *WebHandler) HandleContactsPage(w http.ResponseWriter, r *http.Request) 
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2408,12 +2411,12 @@ func (h *WebHandler) HandleContactsPage(w http.ResponseWriter, r *http.Request) 
                 await loadAttributeCounts();
                 displayContacts(allContacts);
             } else {
-                document.getElementById('contacts-list').innerHTML = '<p class="p-8 text-center text-red-500">Error loading contacts</p>';
-                Toast.error('Failed to load contacts');
+                document.getElementById('contacts-list').innerHTML = '<p class="p-8 text-center text-red-500">' + t('Error loading contacts') + '</p>';
+                Toast.error(t('Failed to load contacts'));
             }
         } catch (error) {
-            document.getElementById('contacts-list').innerHTML = '<p class="p-8 text-center text-red-500">Error: ' + error.message + '</p>';
-            Toast.error('Failed to load contacts');
+            document.getElementById('contacts-list').innerHTML = '<p class="p-8 text-center text-red-500">' + t('Error') + ': ' + error.message + '</p>';
+            Toast.error(t('Failed to load contacts'));
         }
     }
 
@@ -2463,7 +2466,7 @@ func (h *WebHandler) HandleContactsPage(w http.ResponseWriter, r *http.Request) 
                 '<p class="text-sm text-gray-500">' + escapeHtml(contact.phone) + '</p>' +
                 '</div>' +
                 '<div class="flex items-center gap-2 text-gray-400">' +
-                '<span class="text-sm">View attributes</span>' +
+                '<span class="text-sm">' + t('View attributes') + '</span>' +
                 '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
                 '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>' +
                 '</svg></div></a>';
@@ -2508,7 +2511,7 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2600,7 +2603,7 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
                 renderGroups();
             }
         } catch (e) {
-            Toast.error('Failed to load groups');
+            Toast.error(t('Failed to load groups'));
         } finally {
             document.getElementById('loading-state').classList.add('hidden');
         }
@@ -2630,7 +2633,7 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
                         </div>
                         <div>
                             <h3 class="font-medium text-gray-900">${escapeHtml(group.name)}</h3>
-                            <p class="text-sm text-gray-500">${group.member_count} members</p>
+                            <p class="text-sm text-gray-500">${group.member_count} ${t('members')}</p>
                         </div>
                     </div>
                     <div class="flex items-center gap-1">
@@ -2647,14 +2650,14 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
                     </div>
                 </div>
                 <a href="/groups/${group.id}" class="block w-full py-2 text-center text-sm font-medium text-whatsapp-600 bg-whatsapp-50 rounded-lg hover:bg-whatsapp-100 transition-colors">
-                    Manage Members
+                    ${t('Manage Members')}
                 </a>
             </div>
         ` + "`" + `).join('');
     }
 
     function showCreateModal() {
-        document.getElementById('modal-title').textContent = 'Create Group';
+        document.getElementById('modal-title').textContent = t('Create Group');
         document.getElementById('group-id').value = '';
         document.getElementById('group-name').value = '';
         document.getElementById('group-modal').classList.remove('hidden');
@@ -2664,7 +2667,7 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
     function editGroup(id) {
         const group = groups.find(g => g.id === id);
         if (!group) return;
-        document.getElementById('modal-title').textContent = 'Edit Group';
+        document.getElementById('modal-title').textContent = t('Edit Group');
         document.getElementById('group-id').value = id;
         document.getElementById('group-name').value = group.name;
         document.getElementById('group-modal').classList.remove('hidden');
@@ -2677,18 +2680,18 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
 
     async function deleteGroup(id) {
         const group = groups.find(g => g.id === id);
-        if (!confirm('Delete "' + group.name + '"? This will also remove all member associations.')) return;
+        if (!confirm(t('Delete') + ' "' + group.name + '"?')) return;
         try {
             const response = await fetch('/api/groups/' + id, { method: 'DELETE' });
             const data = await response.json();
             if (data.success) {
-                Toast.success('Group deleted');
+                Toast.success(t('Group deleted'));
                 loadGroups();
             } else {
-                Toast.error(data.message || 'Failed to delete group');
+                Toast.error(data.message || t('Failed to delete group'));
             }
         } catch (e) {
-            Toast.error('Failed to delete group');
+            Toast.error(t('Failed to delete group'));
         }
     }
 
@@ -2697,7 +2700,7 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
         const id = document.getElementById('group-id').value;
         const name = document.getElementById('group-name').value.trim();
         if (!name) {
-            Toast.error('Group name is required');
+            Toast.error(t('Group name is required'));
             return;
         }
         try {
@@ -2710,14 +2713,14 @@ func (h *WebHandler) HandleGroupsPage(w http.ResponseWriter, r *http.Request) {
             });
             const data = await response.json();
             if (data.success) {
-                Toast.success(id ? 'Group updated' : 'Group created');
+                Toast.success(id ? t('Group updated') : t('Group created'));
                 hideModal();
                 loadGroups();
             } else {
-                Toast.error(data.message || 'Failed to save group');
+                Toast.error(data.message || t('Failed to save group'));
             }
         } catch (e) {
-            Toast.error('Failed to save group');
+            Toast.error(t('Failed to save group'));
         }
     });
 
@@ -2757,7 +2760,7 @@ func (h *WebHandler) HandleGroupDetailPage(w http.ResponseWriter, r *http.Reques
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -2860,14 +2863,14 @@ func (h *WebHandler) HandleGroupDetailPage(w http.ResponseWriter, r *http.Reques
                 group = data.group;
                 members = data.members || [];
                 document.getElementById('group-name').textContent = group.name;
-                document.getElementById('member-count').textContent = members.length + ' members';
+                document.getElementById('member-count').textContent = members.length + ' ' + t('members');
                 renderMembers();
             } else {
-                Toast.error('Failed to load group');
+                Toast.error(t('Failed to load group'));
                 window.location.href = '/groups';
             }
         } catch (e) {
-            Toast.error('Failed to load group');
+            Toast.error(t('Failed to load group'));
         }
     }
 
@@ -2885,7 +2888,7 @@ func (h *WebHandler) HandleGroupDetailPage(w http.ResponseWriter, r *http.Reques
             const data = await response.json();
             if (data.success) {
                 drafts = data.drafts || [];
-                document.getElementById('draft-select').innerHTML = '<option value="">Select a draft...</option>' +
+                document.getElementById('draft-select').innerHTML = '<option value="">' + t('Select a draft...') + '</option>' +
                     drafts.map(d => '<option value="' + d.id + '">' + escapeHtml(d.title) + '</option>').join('');
             }
         } catch (e) {}
@@ -2977,7 +2980,7 @@ func (h *WebHandler) HandleGroupDetailPage(w http.ResponseWriter, r *http.Reques
             });
             const data = await response.json();
             if (data.success) {
-                Toast.success('Members added');
+                Toast.success(t('Members added'));
                 selectedToAdd = [];
                 renderSelectedContacts();
                 loadGroup();
@@ -2985,28 +2988,28 @@ func (h *WebHandler) HandleGroupDetailPage(w http.ResponseWriter, r *http.Reques
                 Toast.error(data.message);
             }
         } catch (e) {
-            Toast.error('Failed to add members');
+            Toast.error(t('Failed to add members'));
         }
     }
 
     async function removeMember(jid) {
-        if (!confirm('Remove this member?')) return;
+        if (!confirm(t('Remove this member?'))) return;
         try {
             const response = await fetch('/api/groups/' + groupId + '/members/' + encodeURIComponent(jid), { method: 'DELETE' });
             const data = await response.json();
             if (data.success) {
-                Toast.success('Member removed');
+                Toast.success(t('Member removed'));
                 loadGroup();
             } else {
                 Toast.error(data.message);
             }
         } catch (e) {
-            Toast.error('Failed to remove member');
+            Toast.error(t('Failed to remove member'));
         }
     }
 
     function showSendModal() {
-        if (members.length === 0) { Toast.warning('Add members first'); return; }
+        if (members.length === 0) { Toast.warning(t('Add members first')); return; }
         document.getElementById('send-modal').classList.remove('hidden');
         loadDrafts();
     }
@@ -3049,7 +3052,7 @@ func (h *WebHandler) HandleGroupDetailPage(w http.ResponseWriter, r *http.Reques
                 Toast.error(data.message);
             }
         } catch (e) {
-            Toast.error('Failed to start batch');
+            Toast.error(t('Failed to start batch'));
         }
     }
 
@@ -3085,7 +3088,7 @@ func (h *WebHandler) HandleBatchRunsPage(w http.ResponseWriter, r *http.Request)
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3158,7 +3161,7 @@ func (h *WebHandler) HandleBatchRunsPage(w http.ResponseWriter, r *http.Request)
                 checkActiveBatch();
             }
         } catch (e) {
-            Toast.error('Failed to load batches');
+            Toast.error(t('Failed to load batches'));
         } finally {
             document.getElementById('loading-state').classList.add('hidden');
         }
@@ -3171,7 +3174,7 @@ func (h *WebHandler) HandleBatchRunsPage(w http.ResponseWriter, r *http.Request)
             const banner = document.getElementById('active-banner');
             if (data.has_active && data.batch) {
                 banner.classList.remove('hidden');
-                document.getElementById('active-info').textContent = 'Sending "' + data.batch.draft_title + '" to "' + data.batch.group_name + '" - ' + data.batch.sent_count + '/' + data.batch.total_count + ' sent';
+                document.getElementById('active-info').textContent = '"' + data.batch.draft_title + '" ' + t('to') + ' "' + data.batch.group_name + '" - ' + data.batch.sent_count + '/' + data.batch.total_count + ' ' + t('sent');
                 document.getElementById('active-link').href = '/batch-runs/' + data.batch.id;
             } else {
                 banner.classList.add('hidden');
@@ -3197,12 +3200,12 @@ func (h *WebHandler) HandleBatchRunsPage(w http.ResponseWriter, r *http.Request)
                 <tr class="hover:bg-gray-50">
                     <td class="px-6 py-4">
                         <p class="font-medium text-gray-900">${escapeHtml(b.draft_title)}</p>
-                        <p class="text-sm text-gray-500">to ${escapeHtml(b.group_name)}</p>
+                        <p class="text-sm text-gray-500">${t('to')} ${escapeHtml(b.group_name)}</p>
                     </td>
                     <td class="px-6 py-4">
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
                             ${b.status === 'running' ? '<span class="w-1.5 h-1.5 bg-blue-500 rounded-full mr-1.5 animate-pulse"></span>' : ''}
-                            ${b.status.charAt(0).toUpperCase() + b.status.slice(1)}
+                            ${t(b.status.charAt(0).toUpperCase() + b.status.slice(1))}
                         </span>
                     </td>
                     <td class="px-6 py-4">
@@ -3216,10 +3219,10 @@ func (h *WebHandler) HandleBatchRunsPage(w http.ResponseWriter, r *http.Request)
                     <td class="px-6 py-4 text-sm text-gray-500">${created}</td>
                     <td class="px-6 py-4 text-right">
                         <div class="flex items-center justify-end gap-2">
-                            <a href="/batch-runs/${b.id}" class="px-3 py-1.5 text-sm text-whatsapp-600 hover:bg-whatsapp-50 rounded-lg">View</a>
+                            <a href="/batch-runs/${b.id}" class="px-3 py-1.5 text-sm text-whatsapp-600 hover:bg-whatsapp-50 rounded-lg">${t('View')}</a>
                             ${b.status === 'running' || b.status === 'queued' ?
-                                '<button onclick="cancelBatch(' + b.id + ')" class="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg">Cancel</button>' :
-                                '<button onclick="deleteBatch(' + b.id + ')" class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Delete</button>'}
+                                '<button onclick="cancelBatch(' + b.id + ')" class="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg">' + t('Cancel') + '</button>' :
+                                '<button onclick="deleteBatch(' + b.id + ')" class="px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">' + t('Delete') + '</button>'}
                         </div>
                     </td>
                 </tr>
@@ -3228,23 +3231,23 @@ func (h *WebHandler) HandleBatchRunsPage(w http.ResponseWriter, r *http.Request)
     }
 
     async function cancelBatch(id) {
-        if (!confirm('Cancel this batch?')) return;
+        if (!confirm(t('Cancel this batch?'))) return;
         try {
             const response = await fetch('/api/batch-runs/' + id + '/cancel', { method: 'POST' });
             const data = await response.json();
-            if (data.success) { Toast.success('Batch cancelled'); loadBatches(); }
+            if (data.success) { Toast.success(t('Batch cancelled')); loadBatches(); }
             else { Toast.error(data.message); }
-        } catch (e) { Toast.error('Failed to cancel batch'); }
+        } catch (e) { Toast.error(t('Failed to cancel batch')); }
     }
 
     async function deleteBatch(id) {
-        if (!confirm('Delete this batch run?')) return;
+        if (!confirm(t('Delete this batch run?'))) return;
         try {
             const response = await fetch('/api/batch-runs/' + id, { method: 'DELETE' });
             const data = await response.json();
-            if (data.success) { Toast.success('Batch deleted'); loadBatches(); }
+            if (data.success) { Toast.success(t('Batch deleted')); loadBatches(); }
             else { Toast.error(data.message); }
-        } catch (e) { Toast.error('Failed to delete batch'); }
+        } catch (e) { Toast.error(t('Failed to delete batch')); }
     }
 
     function escapeHtml(text) {
@@ -3278,7 +3281,7 @@ func (h *WebHandler) HandleBatchRunDetailPage(w http.ResponseWriter, r *http.Req
 	}
 
 	html := `<!DOCTYPE html>
-<html lang="en">
+<html lang="tr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -3381,28 +3384,28 @@ func (h *WebHandler) HandleBatchRunDetailPage(w http.ResponseWriter, r *http.Req
                 updateUI();
                 if (batch.status === 'running' || batch.status === 'queued') startSSE();
             } else {
-                Toast.error('Batch not found');
+                Toast.error(t('Batch not found'));
                 window.location.href = '/batch-runs';
             }
         } catch (e) {
-            Toast.error('Failed to load batch');
+            Toast.error(t('Failed to load batch'));
         }
     }
 
     function updateUI() {
-        document.getElementById('batch-title').textContent = 'Sending "' + batch.draft_title + '"';
-        document.getElementById('batch-subtitle').textContent = 'to ' + batch.group_name + ' (' + batch.total_count + ' contacts)';
+        document.getElementById('batch-title').textContent = batch.draft_title;
+        document.getElementById('batch-subtitle').textContent = t('to') + ' ' + batch.group_name + ' (' + batch.total_count + ' ' + t('contacts') + ')';
         const badge = document.getElementById('status-badge');
         const statusColors = { 'queued': 'bg-gray-100 text-gray-700', 'running': 'bg-blue-100 text-blue-700', 'completed': 'bg-green-100 text-green-700', 'cancelled': 'bg-gray-100 text-gray-500', 'failed': 'bg-red-100 text-red-700' };
         badge.className = 'px-3 py-1 rounded-full text-sm font-medium ' + (statusColors[batch.status] || 'bg-gray-100 text-gray-700');
-        badge.innerHTML = (batch.status === 'running' ? '<span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>' : '') + batch.status.charAt(0).toUpperCase() + batch.status.slice(1);
+        badge.innerHTML = (batch.status === 'running' ? '<span class="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2 animate-pulse"></span>' : '') + t(batch.status.charAt(0).toUpperCase() + batch.status.slice(1));
         const total = batch.total_count;
         const done = batch.sent_count + batch.failed_count;
         const progress = total > 0 ? (done / total * 100) : 0;
         document.getElementById('progress-bar').style.width = progress + '%';
         document.getElementById('progress-text').textContent = done + '/' + total;
-        document.getElementById('sent-count').textContent = batch.sent_count + ' sent';
-        document.getElementById('failed-count').textContent = batch.failed_count + ' failed';
+        document.getElementById('sent-count').textContent = batch.sent_count + ' ' + t('sent');
+        document.getElementById('failed-count').textContent = batch.failed_count + ' ' + t('failed');
         const currentStatus = document.getElementById('current-status');
         const actions = document.getElementById('actions');
         if (batch.status === 'running' || batch.status === 'queued') {
@@ -3470,7 +3473,7 @@ func (h *WebHandler) HandleBatchRunDetailPage(w http.ResponseWriter, r *http.Req
         }
         if (data.type === 'completed' || data.type === 'cancelled') {
             if (eventSource) { eventSource.close(); eventSource = null; }
-            Toast.success(data.type === 'completed' ? 'Batch completed!' : 'Batch cancelled');
+            Toast.success(data.type === 'completed' ? t('Batch completed!') : t('Batch cancelled'));
             // Refresh messages to get final state from database
             refreshMessages();
         }
@@ -3489,17 +3492,17 @@ func (h *WebHandler) HandleBatchRunDetailPage(w http.ResponseWriter, r *http.Req
     }
 
     async function cancelBatch() {
-        if (!confirm('Cancel this batch?')) return;
+        if (!confirm(t('Cancel this batch?'))) return;
         try {
             const response = await fetch('/api/batch-runs/' + batchId + '/cancel', { method: 'POST' });
             const data = await response.json();
             if (data.success) {
-                Toast.success('Batch cancelled');
+                Toast.success(t('Batch cancelled'));
                 batch.status = 'cancelled';
                 updateUI();
                 if (eventSource) { eventSource.close(); eventSource = null; }
             } else { Toast.error(data.message); }
-        } catch (e) { Toast.error('Failed to cancel batch'); }
+        } catch (e) { Toast.error(t('Failed to cancel batch')); }
     }
 
     function showMessageDetail(id) {
